@@ -1,9 +1,10 @@
 from flask import Flask, request,jsonify
 import sqlite3
+from flask_cors import CORS
 
 
 app = Flask(__name__)
-
+CORS(app)
 
 def init_db():
     with sqlite3.connect('database.db') as conn:
@@ -13,36 +14,34 @@ def init_db():
                     categoria TEXT NOT NULL,
                     autor TEXT NOT NULL,
                     imagem_url TEXT NOT NULL
-                    )""")
+                    )
+                    """)
         
         print("Banco de dados incializado com sucesso!!")
 init_db()
 
 @app.route('/')
 def homepage():
-    return '<h2>minha página Livia</h2>'
+    return 'olá'
 
 @app.route("/doar", methods=['POST'])
 def doar():
 
-    dados = request.get_jason()
+    dados = request.get_json()
 
     titulo = dados.get("titulo")
-
     categoria = dados.get("categoria")
-
     autor = dados.get("autor")
-
     imagem_url = dados.get("imagem_url")
 
-    if not titulo or not categoria or not autor or not imagem_url:
+    if not all([titulo, categoria, autor, imagem_url]):
 
         return jsonify ({'erro':'todos os campos são obrigatórios'}), 400
     
     with sqlite3.connect('database.db') as conn:
-        conn.execute(""" INSERT INTO livros (titulos, categoria, autor, imagem_url))
-                        VALUES(?,?,?,?)
-                        """)
+        conn.execute(f""" INSERT INTO livros (titulo, categoria, autor, imagem_url)
+                        VALUES (?,?,?,?)
+                        """, (titulo, categoria, autor, imagem_url))
         conn.commit()
 
         return jsonify({'mensagem': 'livros cadastrados com sucesso'}), 201
